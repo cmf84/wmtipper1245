@@ -1,0 +1,25 @@
+services:
+  wmtipper:
+    build: .
+    image: wmtipper:latest
+    container_name: wmtipper
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # --- Pflicht ---
+      FOOTBALL_DATA_API_KEY: "${FOOTBALL_DATA_API_KEY}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      SESSION_SECRET: "${SESSION_SECRET}"
+      # --- Optional (mit sinnvollen Defaults) ---
+      FOOTBALL_DATA_COMPETITION: "${FOOTBALL_DATA_COMPETITION:-WC}"
+      SYNC_CRON: "${SYNC_CRON:-*/2 * * * *}"
+      ENABLE_SYNC: "${ENABLE_SYNC:-true}"
+      DATABASE_PATH: "/data/wmtipper.db"
+      TZ: "${TZ:-Europe/Berlin}"
+    volumes:
+      # Persistenz der SQLite-Datenbank. Auf TrueNAS einen Host-Pfad / Dataset mappen.
+      - wmtipper-data:/data
+
+volumes:
+  wmtipper-data:

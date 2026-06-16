@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-display: 'Trebuchet MS', 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: #f0fdf4;
+  background: radial-gradient(ellipse at top, #14532d 0%, #0b3d20 45%, #052e16 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Dezente Rasen-Streifen im Hintergrund */
+.pitch-stripes {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 40px,
+    transparent 40px,
+    transparent 80px
+  );
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-lg;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:opacity-50;
+  }
+  .btn-gold {
+    @apply btn bg-gold-500 text-pitch-950 hover:bg-gold-400;
+  }
+  .btn-ghost {
+    @apply btn bg-white/10 text-white hover:bg-white/20;
+  }
+  .input {
+    @apply rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-white placeholder-white/40 outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400;
+  }
+}

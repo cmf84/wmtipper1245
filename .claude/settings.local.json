@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(cat /tmp/standalone.log | tail -30)",
+      "Bash(timeout 50 npm run dev)",
+      "Bash(node -e \"fetch\\('http://localhost:3000/'\\).then\\(r=>console.log\\('GET / ->',r.status\\)\\).catch\\(e=>console.log\\('err',e.message\\)\\)\")",
+      "Bash(node -e \"fetch\\('http://localhost:3000/spiele'\\).then\\(r=>console.log\\('GET /spiele ->',r.status\\)\\).catch\\(e=>console.log\\('err',e.message\\)\\)\")",
+      "Bash(node -e \"fetch\\('http://localhost:3000/api/leaderboard'\\).then\\(r=>r.json\\(\\)\\).then\\(j=>console.log\\('API ->',j.entries.map\\(e=>e.name+':'+e.points\\).join\\(', '\\)\\)\\).catch\\(e=>console.log\\('err',e.message\\)\\)\")",
+      "Read(//tmp/**)"
+    ]
+  }
+}
