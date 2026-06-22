@@ -13,7 +13,7 @@ services:
       SESSION_SECRET: "${SESSION_SECRET}"
       # --- Optional (mit sinnvollen Defaults) ---
       FOOTBALL_DATA_COMPETITION: "${FOOTBALL_DATA_COMPETITION:-WC}"
-      SYNC_CRON: "${SYNC_CRON:-*/2 * * * *}"
+      SYNC_CRON: "${SYNC_CRON:-*/10 * * * * *}"
       ENABLE_SYNC: "${ENABLE_SYNC:-true}"
       DATABASE_PATH: "/data/wmtipper.db"
       TZ: "${TZ:-Europe/Berlin}"
