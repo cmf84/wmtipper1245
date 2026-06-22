@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { TeamBadge } from '@/components/Team';
 import { dayKey, formatDay, formatKickoff, stageLabel, statusLabel } from '@/lib/format';
-import { getMatches, isFinished, isLive } from '@/lib/queries';
+import { getMatches, hasKickedOff, isFinished, isLive } from '@/lib/queries';
 import type { Match } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
@@ -25,16 +25,82 @@ function ResultBadge({ m }: { m: Match }) {
   );
 }
 
-export default function SpielePage() {
-  const matches = getMatches();
+function MatchRow({ m }: { m: Match }) {
+  return (
+    <Link
+      href={`/spiele/${m.id}`}
+      className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-3 hover:bg-white/5"
+    >
+      <div className="min-w-0">
+        <TeamBadge name={m.homeTeamName} code={m.homeTeamCode} crest={m.homeTeamCrest} />
+      </div>
+      <div className="flex flex-col items-center px-2">
+        <ResultBadge m={m} />
+        <span
+          className={`mt-0.5 text-[10px] uppercase tracking-wide ${
+            isLive(m)
+              ? 'animate-pulse-live font-bold text-red-300'
+              : isFinished(m)
+                ? 'text-white/40'
+                : 'text-white/40'
+          }`}
+        >
+          {isLive(m) ? '● live' : statusLabel(m.status)}
+        </span>
+      </div>
+      <div className="flex min-w-0 justify-end">
+        <TeamBadge
+          name={m.awayTeamName}
+          code={m.awayTeamCode}
+          crest={m.awayTeamCrest}
+          align="right"
+        />
+      </div>
+    </Link>
+  );
+}
 
-  // nach Tag gruppieren
+function groupByDay(ms: Match[]): Map<string, Match[]> {
   const groups = new Map<string, Match[]>();
-  for (const m of matches) {
+  for (const m of ms) {
     const key = dayKey(m.utcDate);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(m);
   }
+  return groups;
+}
+
+function DayGroup({ dayMatches }: { dayMatches: Match[] }) {
+  return (
+    <section className="space-y-2">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50">
+        {formatDay(dayMatches[0].utcDate)}
+      </h2>
+      <div className="card divide-y divide-white/10 overflow-hidden">
+        {dayMatches.map((m) => (
+          <MatchRow key={m.id} m={m} />
+        ))}
+      </div>
+      <p className="px-1 text-xs text-white/30">
+        {stageLabel(dayMatches[0].stage, dayMatches[0].group)}
+      </p>
+    </section>
+  );
+}
+
+export default function SpielePage() {
+  const matches = getMatches();
+
+  const upcoming = matches
+    .filter((m) => !hasKickedOff(m))
+    .sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime());
+
+  const pastAndLive = matches
+    .filter((m) => hasKickedOff(m))
+    .sort((a, b) => new Date(b.utcDate).getTime() - new Date(a.utcDate).getTime());
+
+  const upcomingGroups = groupByDay(upcoming);
+  const pastGroups = groupByDay(pastAndLive);
 
   return (
     <div className="space-y-6">
@@ -46,48 +112,22 @@ export default function SpielePage() {
         </div>
       )}
 
-      {[...groups.entries()].map(([key, dayMatches]) => (
-        <section key={key} className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50">
-            {formatDay(dayMatches[0].utcDate)}
-          </h2>
-          <div className="card divide-y divide-white/10 overflow-hidden">
-            {dayMatches.map((m) => (
-              <Link
-                key={m.id}
-                href={`/spiele/${m.id}`}
-                className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-3 hover:bg-white/5"
-              >
-                <div className="min-w-0">
-                  <TeamBadge name={m.homeTeamName} code={m.homeTeamCode} crest={m.homeTeamCrest} />
-                </div>
-                <div className="flex flex-col items-center px-2">
-                  <ResultBadge m={m} />
-                  <span
-                    className={`mt-0.5 text-[10px] uppercase tracking-wide ${
-                      isLive(m)
-                        ? 'animate-pulse-live font-bold text-red-300'
-                        : isFinished(m)
-                          ? 'text-white/40'
-                          : 'text-white/40'
-                    }`}
-                  >
-                    {isLive(m) ? '● live' : statusLabel(m.status)}
-                  </span>
-                </div>
-                <div className="flex min-w-0 justify-end">
-                  <TeamBadge
-                    name={m.awayTeamName}
-                    code={m.awayTeamCode}
-                    crest={m.awayTeamCrest}
-                    align="right"
-                  />
-                </div>
-              </Link>
+      {upcoming.length > 0 && (
+        <details open className="group space-y-4">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold uppercase tracking-wide text-white/50 hover:text-white/80">
+            <span className="transition-transform group-open:rotate-90">▶</span>
+            Kommende Spiele ({upcoming.length})
+          </summary>
+          <div className="space-y-6">
+            {[...upcomingGroups.entries()].map(([key, dayMatches]) => (
+              <DayGroup key={key} dayMatches={dayMatches} />
             ))}
           </div>
-          <p className="px-1 text-xs text-white/30">{stageLabel(dayMatches[0].stage, dayMatches[0].group)}</p>
-        </section>
+        </details>
+      )}
+
+      {[...pastGroups.entries()].map(([key, dayMatches]) => (
+        <DayGroup key={key} dayMatches={dayMatches} />
       ))}
     </div>
   );
