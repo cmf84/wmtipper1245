@@ -102,6 +102,10 @@ export default function SpielePage() {
   const upcomingGroups = groupByDay(upcoming);
   const pastGroups = groupByDay(pastAndLive);
 
+  // Nächster Spieltag immer sichtbar, Rest im ausklappbaren Bereich
+  const upcomingEntries = [...upcomingGroups.entries()];
+  const [nextDayEntry, ...laterEntries] = upcomingEntries;
+
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Spiele ⚽</h1>
@@ -112,19 +116,21 @@ export default function SpielePage() {
         </div>
       )}
 
-      {upcoming.length > 0 && (
+      {laterEntries.length > 0 && (
         <details open className="group space-y-4">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold uppercase tracking-wide text-white/50 hover:text-white/80">
             <span className="transition-transform group-open:rotate-90">▶</span>
-            Kommende Spiele ({upcoming.length})
+            Weitere Spiele ({upcoming.length - (nextDayEntry?.[1].length ?? 0)})
           </summary>
           <div className="space-y-6">
-            {[...upcomingGroups.entries()].map(([key, dayMatches]) => (
+            {laterEntries.map(([key, dayMatches]) => (
               <DayGroup key={key} dayMatches={dayMatches} />
             ))}
           </div>
         </details>
       )}
+
+      {nextDayEntry && <DayGroup dayMatches={nextDayEntry[1]} />}
 
       {[...pastGroups.entries()].map(([key, dayMatches]) => (
         <DayGroup key={key} dayMatches={dayMatches} />
