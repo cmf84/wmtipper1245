@@ -71,6 +71,52 @@ export async function deleteParticipant(formData: FormData) {
 }
 
 /**
+ * Speichert alle Tipps eines Teilnehmers über mehrere Spiele.
+ * Felder: participantId, tip_<matchId>_home / tip_<matchId>_away.
+ */
+export async function saveTipsByParticipant(formData: FormData) {
+  await assertAdmin();
+  const participantId = Number(formData.get('participantId'));
+  if (!participantId) return;
+
+  const allMatches = db.select({ id: matches.id }).from(matches).all();
+
+  db.transaction((tx) => {
+    for (const m of allMatches) {
+      const rawHome = formData.get(`tip_${m.id}_home`);
+      const rawAway = formData.get(`tip_${m.id}_away`);
+      if (rawHome === null && rawAway === null) continue; // Feld nicht im Formular
+
+      const homeStr = rawHome == null ? '' : String(rawHome).trim();
+      const awayStr = rawAway == null ? '' : String(rawAway).trim();
+
+      if (homeStr === '' || awayStr === '') {
+        tx.delete(tips)
+          .where(and(eq(tips.participantId, participantId), eq(tips.matchId, m.id)))
+          .run();
+        continue;
+      }
+
+      const home = Math.max(0, Math.trunc(Number(homeStr)));
+      const away = Math.max(0, Math.trunc(Number(awayStr)));
+      if (Number.isNaN(home) || Number.isNaN(away)) continue;
+
+      tx.insert(tips)
+        .values({ participantId, matchId: m.id, homeGoals: home, awayGoals: away })
+        .onConflictDoUpdate({
+          target: [tips.participantId, tips.matchId],
+          set: { homeGoals: home, awayGoals: away, updatedAt: new Date().toISOString() },
+        })
+        .run();
+    }
+  });
+
+  recomputeAllPoints();
+  revalidatePath('/admin/tipps');
+  revalidatePath('/');
+}
+
+/**
  * Speichert die Tipps aller Teilnehmer für ein Spiel.
  * Felder: tip_<participantId>_home / tip_<participantId>_away.
  * Leere Felder löschen einen evtl. vorhandenen Tipp.
