@@ -91,16 +91,18 @@ function DayGroup({ dayMatches }: { dayMatches: Match[] }) {
 export default function SpielePage() {
   const matches = getMatches();
 
+  const liveMatches = matches.filter(isLive);
+
   const upcoming = matches
     .filter((m) => !hasKickedOff(m))
     .sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime());
 
-  const pastAndLive = matches
-    .filter((m) => hasKickedOff(m))
+  const past = matches
+    .filter((m) => hasKickedOff(m) && !isLive(m))
     .sort((a, b) => new Date(b.utcDate).getTime() - new Date(a.utcDate).getTime());
 
   const upcomingGroups = groupByDay(upcoming);
-  const pastGroups = groupByDay(pastAndLive);
+  const pastGroups = groupByDay(past);
 
   // Nächster Spieltag immer sichtbar, Rest im ausklappbaren Bereich
   const upcomingEntries = [...upcomingGroups.entries()];
@@ -114,6 +116,20 @@ export default function SpielePage() {
         <div className="card p-8 text-center text-white/70">
           Noch keine Spiele geladen. Im Admin-Bereich „Jetzt synchronisieren" auslösen.
         </div>
+      )}
+
+      {liveMatches.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-red-300">
+            <span className="h-2 w-2 animate-pulse-live rounded-full bg-red-400" />
+            Live
+          </h2>
+          <div className="card divide-y divide-white/10 overflow-hidden border-red-400/30 bg-red-500/10">
+            {liveMatches.map((m) => (
+              <MatchRow key={m.id} m={m} />
+            ))}
+          </div>
+        </section>
       )}
 
       {laterEntries.length > 0 && (
