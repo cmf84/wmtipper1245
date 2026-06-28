@@ -117,10 +117,10 @@ export default function SpielePage() {
       )}
 
       {laterEntries.length > 0 && (
-        <details open className="group space-y-4">
+        <details className="group space-y-4">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold uppercase tracking-wide text-white/50 hover:text-white/80">
             <span className="transition-transform group-open:rotate-90">▶</span>
-            Weitere Spiele ({upcoming.length - (nextDayEntry?.[1].length ?? 0)})
+            Zukünftige Spiele ({upcoming.length - (nextDayEntry?.[1].length ?? 0)})
           </summary>
           <div className="space-y-6">
             {laterEntries.map(([key, dayMatches]) => (
