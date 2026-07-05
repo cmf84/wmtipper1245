@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { formatKickoff } from '@/lib/format';
-import { getParticipantDetail } from '@/lib/queries';
+import { getParticipantDetail, hasKickedOff } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,9 @@ export default async function ParticipantPage({ params }: { params: Promise<{ id
   if (!detail) notFound();
 
   const { participant, totalPoints, rows } = detail;
-  const withTip = rows.filter((r) => r.homeGoals != null);
+  const withTip = rows
+    .filter((r) => r.homeGoals != null && hasKickedOff(r.match))
+    .sort((a, b) => new Date(b.match.utcDate).getTime() - new Date(a.match.utcDate).getTime());
 
   return (
     <div className="space-y-6">
